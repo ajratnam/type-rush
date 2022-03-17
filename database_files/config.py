@@ -1,0 +1,15 @@
+from utils import get_path
+
+
+MYSQL_WRAPPER = 'pymysql'
+MYSQL_HOST = 'localhost'
+MYSQL_USERNAME = 'root'
+MYSQL_PASSWORD = 'root'
+
+SQLITE3_DATABASE = 'type_rush.db'
+SQLITE3_DATABASE_PATH = get_path(__file__, SQLITE3_DATABASE)
+
+MYSQL_CONNECT_COMMAND = f'mysql+{MYSQL_WRAPPER}://{MYSQL_USERNAME}:{MYSQL_PASSWORD}@{MYSQL_HOST}'
+SQLITE3_CONNECT_COMMAND = f'sqlite:///{SQLITE3_DATABASE_PATH}'
+
+DATABASE_NAME = 'type_rush'
