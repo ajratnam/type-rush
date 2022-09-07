@@ -42,20 +42,20 @@ class History(BaseScreen):
         NEXT_BUTTON.action = lambda: setattr(self, 'page', self.page + 1)
         BACK_BUTTON_SUB.action = lambda: setattr(self, 'scene', self.show_history)
         COMPARE_BUTTON.action = lambda: [setattr(self, 'original_score', self.score), setattr(self, 'scene', self.show_history)]
-        STOP_COMPARE_BUTTON.action = lambda: [setattr(self, 'original_score', None), self.toggle(self.score)]
+        STOP_COMPARE_BUTTON.action = lambda: [setattr(self, 'original_score', None), lambda: setattr(self, 'scene', self.show_history)]
 
     def show_history(self):
         if not hasattr(self, 'history'):
             self.history = list(history_iterator())
 
-        tot = len(rows := self.history[20*self.page: 20*(self.page+1)])
-        ncols = math.ceil(math.sqrt(tot))
-        nrows = math.ceil(tot/ncols)
+        if tot := len(rows := self.history[20*self.page: 20*(self.page+1)]):
+            ncols = math.ceil(math.sqrt(tot))
+            nrows = math.ceil(tot/ncols)
 
-        for nrow, y in enumerate(linspace(0, WIDTH, nrows+2)[1:-1]):
-            curr = rows[ncols*nrow:ncols*(nrow+1)]
-            for ncol, x in enumerate(linspace(0, 3*HEIGHT/4, len(curr)+2)[1:-1]):
-                Button(Text(f'{curr[ncol].date_created}', pos(y, x)), {'text_color': Colors.BRIGHT_BLUE}, action=lambda: self.toggle(ncols*nrow+ncol)).draw(self)
+            for nrow, y in enumerate(linspace(0, WIDTH, nrows+2)[1:-1]):
+                curr = rows[ncols*nrow:ncols*(nrow+1)]
+                for ncol, x in enumerate(linspace(0, 3*HEIGHT/4, len(curr)+2)[1:-1]):
+                    Button(Text(f'{curr[ncol].date_created}', pos(y, x)), {'text_color': Colors.BRIGHT_BLUE}, action=lambda: self.toggle(ncols*nrow+ncol)).draw(self)
 
         BACK_BUTTON_MAIN.draw(self)
         if self.page > 0:

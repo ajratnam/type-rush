@@ -8,7 +8,7 @@ def setup_database(session):
         engine.execute(f'create database if not exists {DATABASE_NAME}')
         engine.execute(f'use {DATABASE_NAME}')
 
-    tables = sum(map(list, engine.execute('show tables').fetchall()), [])
+    tables = engine.table_names()
 
     if 'users' not in tables:
         User.__table__.create(engine)
