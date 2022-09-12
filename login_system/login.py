@@ -1,4 +1,3 @@
-from database_files.database import User
 from utils import *
 import string
 

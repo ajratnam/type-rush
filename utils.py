@@ -60,7 +60,7 @@ def stop() -> None:
 
 
 class Text:
-    def __init__(self, text: str, position: Optional[pygame.Vector2] = None, width: int = 0, height: int = 0, font: pygame.font.Font = SmallFont, background_color: Optional[tuple[int, int, int]] = None,
+    def __init__(self, text: str | list, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: int = 0, height: int = 0, font: pygame.font.Font = SmallFont, background_color: Optional[tuple[int, int, int]] = None,
                  text_color: tuple[int, int, int] = TEXT_COLOR, text_is_centered: bool = True, box_is_centered: bool = True, alpha: Optional[int] = None) -> None:
         self.text = text
         self.pos = position
@@ -73,10 +73,10 @@ class Text:
         self.box_is_centered = box_is_centered
         self.alpha = alpha
 
-    def format(self, text: str) -> 'Text':
+    def format(self, text: str | list) -> 'Text':
         return self.modify(text)
 
-    def modify(self, text: Optional[str] = None, position: Optional[pygame.Vector2] = None, width: Optional[int] = None, height: Optional[int] = None, font: Optional[pygame.font.Font] = None, background_color: Optional[tuple[int, int, int]] = None,
+    def modify(self, text: Optional[str | list] = None, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: Optional[int] = None, height: Optional[int] = None, font: Optional[pygame.font.Font] = None, background_color: Optional[tuple[int, int, int]] = None,
                text_color: Optional[tuple[int, int, int]] = None, text_is_centered: Optional[bool] = None, box_is_centered: Optional[bool] = None, alpha: Optional[int] = None) -> 'Text':
         text = self.text if text is None else text
         position = self.pos if position is None else position
@@ -150,7 +150,7 @@ class Button:
             return arect()
         return self.default_text.draw()
 
-    def modify(self, default_text: Optional[Text] = None, active_text: Optional[Text | EllipsisType | dict] = None, action: Optional[Callable[[], Any]] = None) -> 'Button':
+    def modify(self, default_text: Optional[Text | dict] = None, active_text: Optional[Text | EllipsisType | dict] = None, action: Optional[Callable[[], Any]] = None) -> 'Button':
         default_text = self.default_text if default_text is None else Button(self.default_text, default_text).active_text
         active_text = self.og_text if active_text is None else active_text if not isinstance(active_text, dict) else self.og_text.modify(active_text) if not isinstance(self.og_text, dict) else {**self.og_text, **active_text} if active_text.pop('extend', None) else active_text
         action = self.action if action is None else action
@@ -196,7 +196,7 @@ class TextInput:
             return False
         return self.verifier(res)
 
-    def show_error(self, text: str) -> bool:
+    def show_error(self, text: str) -> bool | None:
         if not hasattr(self, 'error'):
             old = self.input
             self.deactivate()
@@ -204,7 +204,7 @@ class TextInput:
             password, self.password = self.password, False
             setattr(self, 'error', True)
             Timer(.3, lambda: [setattr(self, 'input', self.input.modify(text_color=Colors.BRIGHT_RED)), Timer(.3, lambda: [setattr(self, 'password', password), setattr(self, 'input', old), self.set_active(), hasattr(self, 'error') and delattr(self, 'error')]).start()]).start()
-        return False
+            return False
 
     @property
     def cursor_pos(self) -> int:
@@ -225,8 +225,8 @@ class TextInput:
         actual_input = ['*'] * len(self.input.text) if self.password else self.input.text
         return self.input.format(''.join(actual_input[:self.cursor_pos] + [self.cursor] + actual_input[self.cursor_pos:])) if actual_input else self.cursor + self.placeholder
 
-    def is_at_pos(self, pos: int) -> bool:
-        return self.group[pos] is self
+    def is_at_pos(self, index: int) -> bool:
+        return self.group[index] is self
 
     def pop_back(self) -> None:
         if self.cursor_pos:
