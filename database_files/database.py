@@ -1,12 +1,11 @@
 from sqlalchemy import Column, Integer, DateTime, CHAR, VARCHAR, ForeignKey, VARBINARY
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
 from sqlalchemy.orm import declarative_base
 from database_files.config import MYSQL_CONNECT_COMMAND, SQLITE3_CONNECT_COMMAND
 from utils import try_connect, encrypt_password, make_user_id, set_value
 
-engine: Engine = try_connect(MYSQL_CONNECT_COMMAND) or try_connect(SQLITE3_CONNECT_COMMAND)
+engine = try_connect(MYSQL_CONNECT_COMMAND) or try_connect(SQLITE3_CONNECT_COMMAND)
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
