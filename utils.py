@@ -32,6 +32,16 @@ class Colors:
 
 
 def get_path(directory: str, file: str) -> str:
+    """
+    Merges a given directory and a file name to get the path of the file.
+
+    Args:
+      directory (str): The directory of the file you want to get the path of.
+      file (str): The name of the file you want to open.
+
+    Returns:
+      str: The path to the file.
+    """
     return os.path.join(os.path.dirname(directory), file)
 
 
@@ -61,8 +71,37 @@ def stop() -> None:
 
 
 class Text:
-    def __init__(self, text: str | list, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: int = 0, height: int = 0, font: pygame.font.Font = SmallFont, background_color: Optional[tuple[int, int, int]] = None,
-                 text_color: tuple[int, int, int] = TEXT_COLOR, text_is_centered: bool = True, box_is_centered: bool = True, alpha: Optional[int] = None) -> None:
+    """
+    This is the class used everywhere to render text to the screen.
+
+    Attributes:
+        text (str/list): The text displayed within the textbox. Can be a string or a list of strings.
+        pos (pygame.Vector2/tuple): The position of the textbox on the screen.
+        width (int): The width of the textbox.
+        height (int): The height of the textbox.
+        font (pygame.font.Font): The font of text that will be rendered on the screen.
+        background_color (tuple): The background color of the text, a.k.a. the color of the box that the text is within.
+        text_color (tuple): The color of the text to be displayed in.
+        text_is_centered (bool): Weather the text should be centered within the box. If not, it will be aligned to the top left corner of the box.
+        box_is_centered (bool): Weather the box should be centered at the given position. If not, it will be aligned to the top left corner at the postion.
+        alpha (int): The transparency of the textbox.
+    """
+    def __init__(self, text: str | list, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: int = 0, height: int = 0, font: pygame.font.Font = SmallFont, background_color: Optional[tuple[int, int, int]] = None, text_color: tuple[int, int, int] = TEXT_COLOR, text_is_centered: bool = True, box_is_centered: bool = True, alpha: Optional[int] = None) -> None:
+        """
+        All initial configuration for the Text object is done here.
+
+        Args:
+          text (str/list): The text to be displayed. Can be a string or a list of strings.
+          position (pygame.Vector2/tuple, optional): The position of the textbox.
+          width (int): The width of the textbox. Defaults to 0
+          height (int): The height of the textbox. Defaults to 0
+          font (pygame.font.Font): The font that the text will be rendered in.
+          background_color (tuple, optional): The color of the box that the text is in.
+          text_color (tuple): The color of the text displayed.
+          text_is_centered (bool): Weather the text should be centered within the box. If not, it will be aligned to the top left corner. Defaults to True.
+          box_is_centered (bool): Weather the box should be centered at the given position. If not, it will be aligned to the top left corner. Defaults to True.
+          alpha (int, optional): The transparency of the textbox.
+        """
         self.text = text
         self.pos = position
         self.width = width
@@ -75,10 +114,37 @@ class Text:
         self.alpha = alpha
 
     def format(self, text: str | list) -> 'Text':
+        """
+        Create a new Text object with the same format as the current one, but with a different text.
+
+        Args:
+          text (str | list): The new text to be formatted.
+
+        Returns:
+          Text: The copied Text object with the new text.
+        """
         return self.modify(text)
 
-    def modify(self, text: Optional[str | list] = None, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: Optional[int] = None, height: Optional[int] = None, font: Optional[pygame.font.Font] = None, background_color: Optional[tuple[int, int, int]] = None,
-               text_color: Optional[tuple[int, int, int]] = None, text_is_centered: Optional[bool] = None, box_is_centered: Optional[bool] = None, alpha: Optional[int] = None) -> 'Text':
+    def modify(self, text: Optional[str | list] = None, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: Optional[int] = None, height: Optional[int] = None, font: Optional[pygame.font.Font] = None, background_color: Optional[tuple[int, int, int]] = None, text_color: Optional[tuple[int, int, int]] = None, text_is_centered: Optional[bool] = None, box_is_centered: Optional[bool] = None, alpha: Optional[int] = None) -> 'Text':
+        """
+        This is used to return a new Text object with the same properties as the original Text object, except for the
+        properties that are explicitly changed
+
+        Args:
+          text (str/list, optional): The new text to be displayed.
+          position (pygame.Vector2/tuple, optional): The new position of the text box.
+          width (int, optional): The new width of the text box.
+          height (int, optional): The new height of the text box.
+          font (pygame.font.Font, optional): The new font of the text.
+          background_color (tuple, optional): The new background color of the text box.
+          text_color (tuple, optional): The new foreground color of the text.
+          text_is_centered (bool, optional): Weather the text should be centered in the box.
+          box_is_centered (bool, optional): Weather the box should be centered at the given position.
+          alpha (int, optional): The new transparency of the text box.
+
+        Returns:
+          Text: A new Text object with the same properties as the original, except for the ones that were changed.
+        """
         text = self.text if text is None else text
         position = self.pos if position is None else position
         width = self.width if width is None else width
@@ -93,12 +159,43 @@ class Text:
                     box_is_centered, alpha)
 
     def __add__(self, other: str) -> 'Text':
+        """
+        Special function invoked when the current Text object is added to a string.
+
+        Args:
+          other (str): String to be added at the end of the current text.
+
+        Returns:
+          Text: A Text object with the new text added to the right side of the current text
+        """
         return self.format(self.text + other)
 
     def __radd__(self, other: str) -> 'Text':
+        """
+        Special function invoked when the current Text object is added to a string.
+
+        Args:
+          other (str): String to be added at the start of the current text.
+
+        Returns:
+          Text: A Text object with the new text added to the left side of the current text
+        """
         return self.format(other + self.text)
 
     def draw(self, should_blit: bool = True) -> pygame.Rect:
+        """
+        Returns a surface with the text rendered on it, which is immediately drawn to the screen, unless should_blit is
+        given as False.
+
+        Args:
+          should_blit (bool): Weather the text should be immediately drawn to the screen. Defaults to True.
+
+        Notes:
+          if should_blit is False, the surface is returned, and it is the responsibility of the user to blit it to the screen.
+
+        Returns:
+          pygame.Rect: The surface with the text rendered on it.
+        """
         surf = self.font.render(self.text, True, self.text_color)
         if self.alpha:
             surf.set_alpha(self.alpha)
@@ -128,7 +225,29 @@ class Text:
 
 
 class Button:
+    """
+    This class is used to create buttons.
+
+    Attributes:
+      default_text (Text): The text that is displayed on the button when it isn't active.
+      active_text (Text/EllipsisType/dict): The text that is displayed on the button when it is active.
+      og_text (Text/EllipsisType/dict): The original value passed as the active_text.
+      action (function): The function that is triggered when the button is clicked.
+    """
     def __init__(self, default_text: Text, active_text: Text | EllipsisType | dict, action: Callable[[], Any] = lambda: None) -> None:
+        """
+        All initial configuration for the Button is done here.
+
+        Args:
+          default_text (Text): The text that will be displayed when the button is not active.
+          active_text (Text/EllipsisType/dict): The text that will be displayed when the button is active.
+          action (function): The function that will be called when the button is pressed.
+
+        Notes:
+            If active_text is Ellipsis, the default_text will be used.
+            If active_text is a dict, it will use the key-value pairs and create a new Text object, by modifying the default_text.
+            The active state of a Button means that the mouse is hovering over it.
+        """
         self.default_text = default_text
         self.active_text = active_text
         self.og_text = active_text
@@ -139,6 +258,16 @@ class Button:
         self.action = action
 
     def draw(self, scene: 'BaseScreen') -> pygame.Rect:
+        """
+        The handler for drawing the button, it shows different text depending on whether the button is active or not.
+        And triggers the action if the button is clicked.
+
+        Args:
+          scene (BaseScreen): The scene that the button is being drawn on.
+
+        Returns:
+          pygame.Rect: The surface of the button that is being drawn.
+        """
         mouse_x, mouse_y = pygame.mouse.get_pos()
 
         arect = self.active_text.draw
@@ -151,7 +280,18 @@ class Button:
             return arect()
         return self.default_text.draw()
 
-    def modify(self, default_text: Optional[Text | dict] = None, active_text: Optional[Text | EllipsisType | dict] = None, action: Optional[Callable[[], Any]] = None) -> 'Button':
+    def modify(self, default_text: Optional[Text | dict] = None, active_text: Optional[Text | dict] = None, action: Optional[Callable[[], Any]] = None) -> 'Button':
+        """
+        This method is used to create a new Button object, by modifying the current one.
+
+        Args:
+          default_text (Text/dict, optional): The new text that should be displayed when the button is not active.
+          active_text (Text/dict, optional): The new text that should be displayed when the button is active.
+          action (function, optional): The new function that should be called when the button is pressed.
+
+        Returns:
+          Button: A new Button object with the modified attributes.
+        """
         default_text = self.default_text if default_text is None else Button(self.default_text, default_text).active_text
         active_text = self.og_text if active_text is None else active_text if not isinstance(active_text, dict) else self.og_text.modify(active_text) if not isinstance(self.og_text, dict) else {**self.og_text, **active_text} if active_text.pop('extend', None) else active_text
         action = self.action if action is None else action
