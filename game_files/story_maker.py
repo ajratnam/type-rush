@@ -14,7 +14,7 @@ def char_filter(story: list[str]) -> str:
       story (list[str]): The raw story to be filtered.
 
     Returns:
-      The story as a single string with the non ascii letters removed.
+      str: The story as a single string with the non ascii letters removed.
     """
     for pos, char in enumerate(story):
         story[pos] = mapping.get(char, '')

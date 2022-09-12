@@ -22,17 +22,17 @@ STATS_BUTTON = LEFT_BUTTON.modify({'text': 'View Stats', 'position': pos(RIGHT_B
 class Game(BaseScreen):
     """
     Attributes:
-        scene_name (str): The name of the game.
-        scene (Callable[[], None]): The current scene.
-        score (int): The current score of the player.
-        word (str | None): The current word being typed.
-        wrong (int): The number of wrong guesses.
-        last_call (float): The time when the letter had last been added.
-        graph_call (float): The time when the graph had last updated.
-        sleep_time (float): The delay before adding a new letter to the story.
-        word_rect (Text | None): The text object of the word.
-        story (Iterator[str]): The story on the screen to be typed.
-        graph (LiveGraph): The interactive graph, which shows the users typing speed.
+      scene_name (str): The name of the game.
+      scene (function): The current scene.
+      score (int): The current score of the player.
+      word (str | None): The current word being typed.
+      wrong (int): The number of wrong guesses.
+      last_call (float): The time when the letter had last been added.
+      graph_call (float): The time when the graph had last updated.
+      sleep_time (float): The delay before adding a new letter to the story.
+      word_rect (Text | None): The text object of the word.
+      story (Iterator[str]): The story on the screen to be typed.
+      graph (LiveGraph): The interactive graph, which shows the users typing speed.
     """
     def __init__(self) -> None:
         """
