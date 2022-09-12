@@ -30,7 +30,8 @@ def get_path(directory, file):
 
 pos = partial(pygame.Vector2)
 
-from game_files.config import *
+if True:
+    from game_files.config import *
 
 pygame.init()
 screen = pygame.display.set_mode(DIMENSIONS)

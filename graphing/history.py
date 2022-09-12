@@ -11,7 +11,6 @@ from game_files.config import HEIGHT, WIDTH, BUTTON_SIZE
 from mem_hub import mem
 from scenes import set_scene
 from utils import BaseScreen, Button, Text, pos, Colors, screen, GAME_AREA, Font, SmallFont
-import seaborn as sns
 
 
 def history_iterator():

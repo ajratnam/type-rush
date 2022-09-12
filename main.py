@@ -14,7 +14,7 @@ class Game:
     scene = LoginScene()
 
 
-Thread(target=playsound, args=(WELCOME_SOUND,)).start()
+Thread(target=playsound, args=(WELCOME_SOUND,), daemon=True).start()
 
 
 game = Game()
