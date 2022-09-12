@@ -6,7 +6,7 @@ stories = []
 mapping = {_: _ for _ in string.ascii_letters+' '}
 
 
-def char_filter(story) -> str:
+def char_filter(story: list[str]) -> str:
     for pos, char in enumerate(story):
         story[pos] = mapping.get(char, '')
     return ''.join(story)

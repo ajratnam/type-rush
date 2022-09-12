@@ -1,4 +1,5 @@
 import math
+from typing import Iterator
 
 import numpy as np
 import pygame
@@ -13,7 +14,7 @@ from scenes import set_scene
 from utils import BaseScreen, Button, Text, pos, Colors, screen, GAME_AREA, Font, SmallFont
 
 
-def history_iterator():
+def history_iterator() -> Iterator[Score]:
     yield from (
         mem['session'].query(Score)
         .filter_by(user_id=mem['user'].id)
@@ -34,16 +35,18 @@ class History(BaseScreen):
     index: int
     score: Score
     page = 0
+    surf: pygame.Surface
+    size: pygame.Vector2
     original_score = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         PREV_BUTTON.action = lambda: setattr(self, 'page', self.page - 1)
         NEXT_BUTTON.action = lambda: setattr(self, 'page', self.page + 1)
         BACK_BUTTON_SUB.action = lambda: setattr(self, 'scene', self.show_history)
         COMPARE_BUTTON.action = lambda: [setattr(self, 'original_score', self.score), setattr(self, 'scene', self.show_history)]
         STOP_COMPARE_BUTTON.action = lambda: [setattr(self, 'original_score', None), lambda: setattr(self, 'scene', self.show_history)]
 
-    def show_history(self):
+    def show_history(self) -> None:
         if not hasattr(self, 'history'):
             self.history = list(history_iterator())
 
@@ -62,7 +65,7 @@ class History(BaseScreen):
         if self.page < self.pages - 1:
             NEXT_BUTTON.draw(self)
 
-    def create_graph(self):
+    def create_graph(self) -> tuple[pygame.Surface, pygame.Vector2]:
         plt.ioff()
         plt.close('all')
         figure, axes = plt.subplots()
@@ -102,15 +105,15 @@ class History(BaseScreen):
 
         (canvas := backend_agg.FigureCanvasAgg(figure)).draw()
         raw_data = canvas.get_renderer().tostring_rgb()
-        size = canvas.get_width_height()
+        size: tuple[int, int] = canvas.get_width_height()
 
         return pygame.image.fromstring(raw_data, size, "RGB"), pos(*size)
 
     @property
-    def pages(self):
+    def pages(self) -> int:
         return math.ceil(self.count / 20)
 
-    def graph(self):
+    def graph(self) -> None:
         screen.blit(self.surf, ((GAME_AREA - self.size)/2).xy)
         if self.original_score:
             STOP_COMPARE_BUTTON.draw(self)
@@ -118,14 +121,14 @@ class History(BaseScreen):
             BACK_BUTTON_SUB.draw(self)
             COMPARE_BUTTON.draw(self)
 
-    def toggle(self, score):
+    def toggle(self, score: int) -> None:
         self.index = score
         self.score = self.history[score]
         self.surf, self.size = self.create_graph()
         self.scene = self.graph
 
     @property
-    def count(self):
+    def count(self) -> int:
         return len(self.history)
 
     scene = show_history

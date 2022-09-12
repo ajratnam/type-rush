@@ -1,8 +1,11 @@
+from typing import Iterator
+
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from database_files.database import Score
+from game_files.game import Game
 from game_files.story_maker import char_filter
 from mem_hub import mem
 
@@ -11,7 +14,7 @@ sns.set(style="dark", context="talk")
 
 
 class LiveGraph:
-    def __init__(self, game, story):
+    def __init__(self, game: Game, story: Iterator[str]) -> None:
         self.game = game
         self.correct = [0, 0, 0]
         self.prev = 0
@@ -26,7 +29,7 @@ class LiveGraph:
         plt.tight_layout()
         plt.show(block=False)
 
-    def plot(self):
+    def plot(self) -> None:
         self.take_screenshot()
         self.axes.clear()
         length = range(max(1, len(self.correct)-9), len(self.correct)+1)
@@ -35,7 +38,7 @@ class LiveGraph:
         self.axes.set(ylim=(0, max(self.correct) or 1), xlabel='Time (seconds)', ylabel='WPM')
         plt.pause(.00001)
 
-    def take_screenshot(self):
+    def take_screenshot(self) -> None:
         score = (self.game.score-self.prev)*self.rig
         if not score and not (self.correct[-2] == self.correct[-1] == 2) and 0 not in self.correct[:-2]:
             score = 2
@@ -43,7 +46,7 @@ class LiveGraph:
         self.prev = self.game.score
         self.wrong.append(self.game.wrong)
 
-    def save(self):
+    def save(self) -> None:
         score = Score(user=mem['user'], score=bytes(self.correct))
         (session := mem['session']).add(score)
         session.commit()

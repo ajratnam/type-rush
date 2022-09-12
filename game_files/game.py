@@ -6,7 +6,6 @@ from playsound import playsound
 
 from config import EXIT_SOUND
 from game_files.story_maker import parse_stories
-from graphing.live import LiveGraph
 from scenes import set_scene
 from utils import *
 
@@ -103,3 +102,7 @@ class Game(BaseScreen):
                 LEFT_BUTTON.text = 'Play again!'
 
             self.last_call = self.now
+
+
+if True:
+    from graphing.live import LiveGraph
