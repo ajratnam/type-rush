@@ -4,6 +4,13 @@ from utils import get_user
 
 
 def setup_database(session: Session) -> None:
+    """
+    It creates the database and tables if they don't exist, and adds a user named 'guest' with no password if it doesn't
+    exist
+
+    Args:
+      session (Session): The session object that will be used to interact with the database.
+    """
     if is_not_sql:
         engine.execute(f'create database if not exists {DATABASE_NAME}')
         engine.execute(f'use {DATABASE_NAME}')
