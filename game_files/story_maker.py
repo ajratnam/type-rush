@@ -11,7 +11,7 @@ def char_filter(story: list[str]) -> str:
     It removes all the non ascii letters.
 
     Args:
-      story (list[str]): The raw story to be filtered.
+      story (list): The raw story to be filtered.
 
     Returns:
       str: The story as a single string with the non ascii letters removed.

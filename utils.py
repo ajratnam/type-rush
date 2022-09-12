@@ -7,6 +7,7 @@ from threading import Timer
 from types import EllipsisType
 from typing import Any, Callable, Optional, Collection, Union
 
+from pygame.event import Event
 from sqlalchemy import create_engine, func
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.default import DefaultExecutionContext
@@ -161,8 +162,41 @@ contains_everything = type('', (), {'__contains__': lambda *_: 1})()
 
 
 class TextInput:
-    def __init__(self, question: Text, _input: Optional[Text | dict] = None, placeholder: Text | str | dict = '', password: bool = False, active: bool = False, _prev: Optional['TextInput'] = None, _next: Optional['TextInput'] = None,
-                 min_length: int = 0, max_length: float = float('inf'), accepted_chars: Collection[str] = contains_everything, verifier: Optional[Callable[[str], bool]] = None) -> None:
+    """
+    The Robust Class to Take Input from the User.
+
+    Attributes:
+      question (Text): The question to ask the user.
+      size (int): The size of the input box.
+      center (bool): Whether the input box should be centered.
+      password (bool): Whether the input should be hidden.
+      active (bool): Whether the input box is active.
+      placeholder (Text): The placeholder text shown when there is no input given by the user inside the textbox.
+      min_length (int): The minimum number of characters required by the input.
+      max_length (int): The maximum number of characters allowed by the input.
+      accepted_chars (str): The list of characters that are allowed by the input.
+      verifier (function): The function that verifies whether the given input is valid.
+      input (str): Styling for input given by the user.
+      current (str): The active TextInput in the group.
+      group (list): The list of TextInputs in the group.
+    """
+    def __init__(self, question: Text, _input: Optional[Text | dict] = None, placeholder: Text | str | dict = '', password: bool = False, active: bool = False, _prev: Optional['TextInput'] = None, _next: Optional['TextInput'] = None, min_length: int = 0, max_length: float = float('inf'), accepted_chars: Collection[str] = contains_everything, verifier: Optional[Callable[[str], bool]] = None) -> None:
+        """
+        All initial configuration for the TextInput is done here.
+
+        Args:
+          question (Text): The question to be asked.
+          _input (Optional[Text | dict]): The configuration of the text entered by the user.
+          placeholder (Text | str | dict): The text that will be displayed when the input is empty.
+          password (bool): If True, the input will be hidden. Defaults to False
+          active (bool): Whether the input is active or not. Defaults to False
+          _prev (TextInput, optional): The previous TextInput to be linked to in the group.
+          _next (TextInput, optional): The next TextInput to be linked to in the group.
+          min_length (int): The minimum number of characters required for the input. Defaults to 0
+          max_length (float): The maximum number of characters that can be entered. Defaults to Infinite
+          accepted_chars (Collection[str]): A collection of characters that are allowed to be entered.
+          verifier (function, optional): A function that takes in the input and returns True if the input is correct.
+        """
         self.question = question
         self.size = question.width, question.height
         self.center = question.pos.xy
@@ -187,6 +221,12 @@ class TextInput:
             self.set_next(_next)
 
     def verify(self) -> bool:
+        """
+        It checks if the input is valid
+
+        Returns:
+          bool: Weather the input is valid or not.
+        """
         res = ''.join(self.input.text)
         if len(res) < self.min_length:
             return self.show_error(f'Minimum atleast {self.min_length} character{" is" if self.min_length == 1 else "s are"} required')
@@ -197,6 +237,15 @@ class TextInput:
         return self.verifier(res)
 
     def show_error(self, text: str) -> bool | None:
+        """
+        Temporarily shows an error message in the input box.
+
+        Args:
+          text (str): The error message to be shown.
+
+        Returns:
+          bool: Weather the error message was displayed or not.
+        """
         if not hasattr(self, 'error'):
             old = self.input
             self.deactivate()
@@ -208,40 +257,92 @@ class TextInput:
 
     @property
     def cursor_pos(self) -> int:
+        """
+        It returns the position of the cursor in the input box.
+
+        Returns:
+          int: Position of the cursor in the input box.
+        """
         return len(self.input.text) if self._cursor_pos is None else self._cursor_pos
 
     @cursor_pos.setter
     def cursor_pos(self, value: int) -> None:
+        """
+        The function which is triggered when the cursor position is changed.
+        It also keeps the cursor in the range of the input box.
+
+        Args:
+          value (int): The new position of the cursor.
+        """
         self._cursor_pos = min(max(value, 0), len(self.input.text)) if isinstance(value, int) else None
 
     @property
     def cursor(self) -> str:
+        """
+        Returns the cursor character or an empty string depending on frame count, giving the illusion of blinking.
+
+        Returns:
+          str: The character for the cursor.
+        """
         self._cursor += 1
         self._cursor %= FPS
         return self.active and '|' * (self._cursor < FPS / 2) or ''
 
     @property
     def text(self) -> 'Text':
+        """
+        Returns the text as per the style of the input box. Also replaces the text with '*' if the input is a password.
+
+        Returns:
+          Text: The text object displayed in the input box.
+        """
         actual_input = ['*'] * len(self.input.text) if self.password else self.input.text
         return self.input.format(''.join(actual_input[:self.cursor_pos] + [self.cursor] + actual_input[self.cursor_pos:])) if actual_input else self.cursor + self.placeholder
 
     def is_at_pos(self, index: int) -> bool:
+        """
+        Checks weather the TextInput is at the given index in the group.
+
+        Args:
+          index (int): The index of the group to check.
+
+        Returns:
+          Weather the TextInput is at the specified index in the group.
+        """
         return self.group[index] is self
 
     def pop_back(self) -> None:
+        """
+        It removes the character which is before the cursors position. Functionality for the backspace key.
+        """
         if self.cursor_pos:
             self.input.text.pop(self.cursor_pos - 1)
             self.cursor_pos -= 1
 
     def pop_front(self) -> None:
+        """
+        It removes the character at the cursor position. Functionality for the delete key.
+        """
         if 0 <= self.cursor_pos + 1 <= len(self.input.text):
             self.input.text.pop(self.cursor_pos)
 
     def add_char(self, char: str) -> None:
+        """
+        It inserts a character into the input text at the current cursor position.
+
+        Args:
+          char (str): The character to add to the input.
+        """
         self.input.text.insert(self.cursor_pos, char)
         self.cursor_pos += 1
 
     def set_next(self, text_input: 'TextInput') -> None:
+        """
+        It sets the given TextInput as the next TextInput in the group.
+
+        Args:
+          text_input (TextInput): The TextInput object to add to the group.
+        """
         self.group.append(text_input)
         if self.current:
             text_input.active = False
@@ -252,48 +353,96 @@ class TextInput:
 
     @property
     def index(self) -> int:
+        """
+        It returns the position of the TextInput in the group.
+
+        Returns:
+          int: Index of the current instance in the group.
+        """
         return self.group.index(self)
 
     @property
     def next(self) -> 'TextInput':
+        """
+        It returns the next TextInput in the group.
+
+        Returns:
+          TextInput: The next TextInput object in the group.
+        """
         if self.index < len(self.group) - 1:
             return self.group[self.index + 1]
 
     @property
     def prev(self) -> 'TextInput':
+        """
+        It returns the previous TextInput in the group.
+
+        Returns:
+          TextInput: The previous TextInput object in the group.
+        """
         if self.index > 0:
             return self.group[self.index - 1]
 
     def __len__(self) -> int:
+        """
+        It returns the length of the input text.
+
+        Returns:
+          int: Number of characters in the input.
+        """
         return len(self.input.text)
 
     def __bool__(self) -> bool:
+        """
+        Returns weather the input text is not empty.
+
+        Returns:
+          bool: Weather the input text contains atleast one character.
+        """
         return True
 
     def set_next_active(self) -> None:
+        """
+        It activates the next TextInput in the group.
+        """
         self.current[0] = None
         if _next := self.next:
             _next.set_active()
         self.active = False
 
     def set_prev_active(self) -> None:
+        """
+        It activates the previous TextInput in the group.
+        """
         self.current[0] = None
         if _prev := self.prev:
             _prev.set_active()
         self.active = False
 
     def set_active(self) -> None:
+        """
+        It activates itself.
+        """
         self.active = True
         if self.current[0] and self.current[0] is not self:
             self.current[0].active = False
         self.current[0] = self
 
     def deactivate(self) -> None:
+        """
+        It deactivates itself.
+        """
         if self.current[0]:
             self.current[0].active = False
         self.current[0] = None
 
     def draw(self, scene: 'BaseScreen') -> None:
+        """
+        It draws the textbox and handles the keyboard events.
+
+        Args:
+          scene (BaseScreen): The screen that the textbox is being drawn on.
+        """
         button = Button(self.question, ..., self.set_active)
         rect = button.draw(scene)
         button.modify(self.text.modify(position=pos(rect.topright), width=self.text.width - rect.width, background_color=SCREEN_COLOR, text_is_centered=False, box_is_centered=False), ...).draw(scene)
@@ -334,18 +483,36 @@ class TextInput:
 
 
 class BaseScreen:
-    scene = handler = lambda _: _
-    events = []
+    """
+    The Base class for all scenes.
+
+    Attributes:
+      events (list): The list of events that happened in the scene.
+      screen (function): The screen that the scene is drawn on.
+      handler (function): The handler which handles the remaining events.
+    """
+    scene: Callable[[], Any] = lambda _: _
+    handler: Callable[[], Any] = lambda _: _
+    events: list[Event] = []
 
     def reset(self) -> None:
+        """
+        It resets the scene to its initial state
+        """
         self.__init__()
 
     def handle_keys(self) -> None:
+        """
+        The abstract method for handling keys.
+        """
         for event in self.events:
             if event.type == pygame.QUIT:
                 stop()
 
     def main_loop(self) -> None:
+        """
+        The abstract method for the main loop, which is called every frame.
+        """
         screen.fill(SCREEN_COLOR)
 
         self.events = list(pygame.event.get())
@@ -358,6 +525,15 @@ class BaseScreen:
 
 
 def try_connect(database: str) -> Engine:
+    """
+    It tries to connect to a database, and returns the engine object if it succeeds.
+
+    Args:
+      database (str): The address of the database.
+
+    Returns:
+      Engine: The engine object which is connected to the database.
+    """
     try:
         engine = create_engine(database, echo=False)
         with engine.connect():
@@ -367,11 +543,30 @@ def try_connect(database: str) -> Engine:
 
 
 def encrypt_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
+    """
+    It hashes the password with the salt and then encrypts it with the sha1 algorithm.
+
+    Args:
+      password (str): The password to be encrypted.
+      salt (Optional[str]): A random string of characters that is used to make the password more secure.
+
+    Returns:
+      tuple[str, str]: A tuple of the encrypted hashed password and the salt.
+    """
     salt = salt if salt else uuid.uuid4().hex
     return hashlib.sha1((password + salt).encode()).hexdigest(), salt
 
 
 def set_value(ctx: DefaultExecutionContext) -> str | None:
+    """
+    It encrypts the password automatically when the user is created.
+
+    Args:
+      ctx (DefaultExecutionContext): The context of the query
+
+    Returns:
+      str: The salt which was used to encrypt the password.
+    """
     ctx = ctx.current_parameters
     if not ctx['password']:
         return
@@ -380,11 +575,27 @@ def set_value(ctx: DefaultExecutionContext) -> str | None:
 
 
 def make_user_id() -> str:
+    """
+    Query the database to get the last user id and increment it by 1.
+
+    Returns:
+      str: The next user id.
+    """
     uid = mem['session'].query(mem['User'].id, func.max(mem['User'].id)).first()[-1]
     return f'user{uid + 1}'
 
 
 def get_user(session: Session, user: 'User') -> Union['User', None]:
+    """
+    Get a user from the database, if it exists.
+
+    Args:
+      session (Session): The session object that is used to query the database.
+      user (User): The dummy user object, which isn't initialized from the database.
+
+    Returns:
+      User: The user object that is initialized from the database.
+    """
     player = session.query(user.__class__).filter_by(username=user.username).all()
     return player[0] if player else None
 
