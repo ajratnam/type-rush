@@ -10,7 +10,7 @@ LEFT_BUTTON = Button(Text('YES', pos(WIDTH/4, 5*HEIGHT/8), WIDTH/5, HEIGHT/10, b
 RIGHT_BUTTON = Button(Text('NO', pos(3*WIDTH/4, 5*HEIGHT/8), WIDTH/5, HEIGHT/10, background_color=Colors.RED, font=MediumFont), {'background_color': Colors.BRIGHT_RED})
 
 
-def verify_register(create=False):
+def verify_register(create: bool = False) -> None:
     skip = isinstance(create, User)
 
     if not skip:
@@ -45,14 +45,14 @@ GUEST_BUTTON = LOGIN.modify({'text': 'Guest Mode', 'position': pos(WIDTH * 5 / 8
 
 
 class LoginScene(BaseScreen):
-    def draw_login(self):
+    def draw_login(self) -> None:
         Text('Login / Register a new account', pos(WIDTH/2, HEIGHT/4), font=Font(70)).draw()
         USERNAME_INPUT.draw(self)
         PASSWORD_INPUT.draw(self)
         LOGIN.draw(self)
         GUEST_BUTTON.draw(self)
 
-    def wait_for_confirmation(self):
+    def wait_for_confirmation(self) -> None:
         Text(f'No user named {"".join(USERNAME_INPUT.input.text)} found, create a new account?', pos(WIDTH/2, 3*HEIGHT/8), font=MediumFont).draw()
         LEFT_BUTTON.action = partial(verify_register, True)
         RIGHT_BUTTON.action = partial(setattr, self, 'scene', self.draw_login)

@@ -1,7 +1,5 @@
 from sqlalchemy.orm import Session
 
-from database_files.config import DATABASE_NAME
-from database_files.database import is_not_sql, engine, User, Score
 from utils import get_user
 
 
@@ -22,3 +20,8 @@ def setup_database(session: Session) -> None:
     if not get_user(session, user):
         session.add(user)
         session.commit()
+
+
+if True:
+    from database_files.config import DATABASE_NAME
+    from database_files.database import is_not_sql, engine, User, Score

@@ -4,10 +4,16 @@ import uuid
 from functools import partial
 from operator import contains
 from threading import Timer
+from types import EllipsisType
+from typing import Any, Callable, Optional, Collection, Union
 
 from sqlalchemy import create_engine, func
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.default import DefaultExecutionContext
 from sqlalchemy.exc import OperationalError
 import pygame
+from sqlalchemy.orm import Session
+
 from mem_hub import mem
 
 
@@ -24,7 +30,7 @@ class Colors:
     GREY = 170, 170, 170
 
 
-def get_path(directory, file):
+def get_path(directory: str, file: str) -> str:
     return os.path.join(os.path.dirname(directory), file)
 
 
@@ -49,44 +55,13 @@ LargerFont = Font(LARGER_FONT_SIZE)
 GAME_AREA = pygame.Vector2(DIMENSIONS)
 
 
-def stop():
+def stop() -> None:
     raise
 
 
-class Button:
-    def __init__(self, default_text, active_text, action=lambda: None):
-        self.default_text = default_text
-        self.active_text = active_text
-        self.og_text = active_text
-        if not active_text or active_text is ...:
-            self.active_text = default_text
-        elif isinstance(active_text, dict):
-            self.active_text = default_text.modify(**active_text)
-        self.action = action
-
-    def draw(self, scene):
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-
-        arect = self.active_text.draw
-
-        if arect(False).collidepoint(mouse_x, mouse_y):
-            if self.action:
-                for event in scene.events:
-                    if event.type == pygame.MOUSEBUTTONDOWN:
-                        self.action()
-            return arect()
-        return self.default_text.draw()
-
-    def modify(self, default_text=None, active_text=None, action=None):
-        default_text = self.default_text if default_text is None else Button(self.default_text, default_text).active_text
-        active_text = self.og_text if active_text is None else active_text if not isinstance(active_text, dict) else self.og_text.modify(active_text) if not isinstance(self.og_text, dict) else {**self.og_text, **active_text} if active_text.pop('extend', None) else active_text
-        action = self.action if action is None else action
-        return Button(default_text, active_text, action)
-
-
 class Text:
-    def __init__(self, text, position=None, width=0, height=0, font=SmallFont, background_color=None,
-                 text_color=TEXT_COLOR, text_is_centered=True, box_is_centered=True, alpha=None):
+    def __init__(self, text: str, position: Optional[pygame.Vector2] = None, width: int = 0, height: int = 0, font: pygame.font.Font = SmallFont, background_color: Optional[tuple[int, int, int]] = None,
+                 text_color: tuple[int, int, int] = TEXT_COLOR, text_is_centered: bool = True, box_is_centered: bool = True, alpha: Optional[int] = None) -> None:
         self.text = text
         self.pos = position
         self.width = width
@@ -98,11 +73,11 @@ class Text:
         self.box_is_centered = box_is_centered
         self.alpha = alpha
 
-    def format(self, text):
+    def format(self, text: str) -> 'Text':
         return self.modify(text)
 
-    def modify(self, text=None, position=None, width=None, height=None, font=None, background_color=None,
-               text_color=None, text_is_centered=None, box_is_centered=None, alpha=None):
+    def modify(self, text: Optional[str] = None, position: Optional[pygame.Vector2] = None, width: Optional[int] = None, height: Optional[int] = None, font: Optional[pygame.font.Font] = None, background_color: Optional[tuple[int, int, int]] = None,
+               text_color: Optional[tuple[int, int, int]] = None, text_is_centered: Optional[bool] = None, box_is_centered: Optional[bool] = None, alpha: Optional[int] = None) -> 'Text':
         text = self.text if text is None else text
         position = self.pos if position is None else position
         width = self.width if width is None else width
@@ -116,13 +91,13 @@ class Text:
         return Text(text, position, width, height, font, background_color, text_color, text_is_centered,
                     box_is_centered, alpha)
 
-    def __add__(self, other):
+    def __add__(self, other: str) -> 'Text':
         return self.format(self.text + other)
 
-    def __radd__(self, other):
+    def __radd__(self, other: str) -> 'Text':
         return self.format(other + self.text)
 
-    def draw(self, should_blit=True):
+    def draw(self, should_blit: bool = True) -> pygame.Rect:
         surf = self.font.render(self.text, True, self.text_color)
         if self.alpha:
             surf.set_alpha(self.alpha)
@@ -151,12 +126,43 @@ class Text:
         return bg_rect if self.background_color else rect
 
 
+class Button:
+    def __init__(self, default_text: Text, active_text: Text | EllipsisType | dict, action: Callable[[], Any] = lambda: None) -> None:
+        self.default_text = default_text
+        self.active_text = active_text
+        self.og_text = active_text
+        if not active_text or active_text is ...:
+            self.active_text = default_text
+        elif isinstance(active_text, dict):
+            self.active_text = default_text.modify(**active_text)
+        self.action = action
+
+    def draw(self, scene: 'BaseScreen') -> pygame.Rect:
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+
+        arect = self.active_text.draw
+
+        if arect(False).collidepoint(mouse_x, mouse_y):
+            if self.action:
+                for event in scene.events:
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        self.action()
+            return arect()
+        return self.default_text.draw()
+
+    def modify(self, default_text: Optional[Text] = None, active_text: Optional[Text | EllipsisType | dict] = None, action: Optional[Callable[[], Any]] = None) -> 'Button':
+        default_text = self.default_text if default_text is None else Button(self.default_text, default_text).active_text
+        active_text = self.og_text if active_text is None else active_text if not isinstance(active_text, dict) else self.og_text.modify(active_text) if not isinstance(self.og_text, dict) else {**self.og_text, **active_text} if active_text.pop('extend', None) else active_text
+        action = self.action if action is None else action
+        return Button(default_text, active_text, action)
+
+
 contains_everything = type('', (), {'__contains__': lambda *_: 1})()
 
 
 class TextInput:
-    def __init__(self, question, _input=None, placeholder='', password=False, active=False, _prev=None, _next=None,
-                 min_length=0, max_length=float('inf'), accepted_chars=contains_everything, verifier=None):
+    def __init__(self, question: Text, _input: Optional[Text | dict] = None, placeholder: Text | str | dict = '', password: bool = False, active: bool = False, _prev: Optional['TextInput'] = None, _next: Optional['TextInput'] = None,
+                 min_length: int = 0, max_length: float = float('inf'), accepted_chars: Collection[str] = contains_everything, verifier: Optional[Callable[[str], bool]] = None) -> None:
         self.question = question
         self.size = question.width, question.height
         self.center = question.pos.xy
@@ -180,7 +186,7 @@ class TextInput:
         if _next:
             self.set_next(_next)
 
-    def verify(self):
+    def verify(self) -> bool:
         res = ''.join(self.input.text)
         if len(res) < self.min_length:
             return self.show_error(f'Minimum atleast {self.min_length} character{" is" if self.min_length == 1 else "s are"} required')
@@ -190,7 +196,7 @@ class TextInput:
             return False
         return self.verifier(res)
 
-    def show_error(self, text):
+    def show_error(self, text: str) -> bool:
         if not hasattr(self, 'error'):
             old = self.input
             self.deactivate()
@@ -198,44 +204,44 @@ class TextInput:
             password, self.password = self.password, False
             setattr(self, 'error', True)
             Timer(.3, lambda: [setattr(self, 'input', self.input.modify(text_color=Colors.BRIGHT_RED)), Timer(.3, lambda: [setattr(self, 'password', password), setattr(self, 'input', old), self.set_active(), hasattr(self, 'error') and delattr(self, 'error')]).start()]).start()
-            return False
+        return False
 
     @property
-    def cursor_pos(self):
+    def cursor_pos(self) -> int:
         return len(self.input.text) if self._cursor_pos is None else self._cursor_pos
 
     @cursor_pos.setter
-    def cursor_pos(self, value):
+    def cursor_pos(self, value: int) -> None:
         self._cursor_pos = min(max(value, 0), len(self.input.text)) if isinstance(value, int) else None
 
     @property
-    def cursor(self):
+    def cursor(self) -> str:
         self._cursor += 1
         self._cursor %= FPS
         return self.active and '|' * (self._cursor < FPS / 2) or ''
 
     @property
-    def text(self):
+    def text(self) -> 'Text':
         actual_input = ['*'] * len(self.input.text) if self.password else self.input.text
         return self.input.format(''.join(actual_input[:self.cursor_pos] + [self.cursor] + actual_input[self.cursor_pos:])) if actual_input else self.cursor + self.placeholder
 
-    def is_at_pos(self, pos):
+    def is_at_pos(self, pos: int) -> bool:
         return self.group[pos] is self
 
-    def pop_back(self):
+    def pop_back(self) -> None:
         if self.cursor_pos:
             self.input.text.pop(self.cursor_pos - 1)
             self.cursor_pos -= 1
 
-    def pop_front(self):
+    def pop_front(self) -> None:
         if 0 <= self.cursor_pos + 1 <= len(self.input.text):
             self.input.text.pop(self.cursor_pos)
 
-    def add_char(self, char):
+    def add_char(self, char: str) -> None:
         self.input.text.insert(self.cursor_pos, char)
         self.cursor_pos += 1
 
-    def set_next(self, text_input):
+    def set_next(self, text_input: 'TextInput') -> None:
         self.group.append(text_input)
         if self.current:
             text_input.active = False
@@ -245,49 +251,49 @@ class TextInput:
         text_input.current = self.current
 
     @property
-    def index(self):
+    def index(self) -> int:
         return self.group.index(self)
 
     @property
-    def next(self):
+    def next(self) -> 'TextInput':
         if self.index < len(self.group) - 1:
             return self.group[self.index + 1]
 
     @property
-    def prev(self):
+    def prev(self) -> 'TextInput':
         if self.index > 0:
             return self.group[self.index - 1]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.input.text)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return True
 
-    def set_next_active(self):
-        self.current[0] = ''
+    def set_next_active(self) -> None:
+        self.current[0] = None
         if _next := self.next:
             _next.set_active()
         self.active = False
 
-    def set_prev_active(self):
-        self.current[0] = ''
+    def set_prev_active(self) -> None:
+        self.current[0] = None
         if _prev := self.prev:
             _prev.set_active()
         self.active = False
 
-    def set_active(self):
+    def set_active(self) -> None:
         self.active = True
         if self.current[0] and self.current[0] is not self:
             self.current[0].active = False
         self.current[0] = self
 
-    def deactivate(self):
+    def deactivate(self) -> None:
         if self.current[0]:
             self.current[0].active = False
-        self.current[0] = ''
+        self.current[0] = None
 
-    def draw(self, scene):
+    def draw(self, scene: 'BaseScreen') -> None:
         button = Button(self.question, ..., self.set_active)
         rect = button.draw(scene)
         button.modify(self.text.modify(position=pos(rect.topright), width=self.text.width - rect.width, background_color=SCREEN_COLOR, text_is_centered=False, box_is_centered=False), ...).draw(scene)
@@ -331,15 +337,15 @@ class BaseScreen:
     scene = handler = lambda _: _
     events = []
 
-    def reset(self):
+    def reset(self) -> None:
         self.__init__()
 
-    def handle_keys(self):
+    def handle_keys(self) -> None:
         for event in self.events:
             if event.type == pygame.QUIT:
                 stop()
 
-    def main_loop(self):
+    def main_loop(self) -> None:
         screen.fill(SCREEN_COLOR)
 
         self.events = list(pygame.event.get())
@@ -351,7 +357,7 @@ class BaseScreen:
         clock.tick(FPS)
 
 
-def try_connect(database):
+def try_connect(database: str) -> Engine:
     try:
         engine = create_engine(database, echo=False)
         with engine.connect():
@@ -360,12 +366,12 @@ def try_connect(database):
         pass
 
 
-def encrypt_password(password, salt=None):
+def encrypt_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
     salt = salt if salt else uuid.uuid4().hex
     return hashlib.sha1((password + salt).encode()).hexdigest(), salt
 
 
-def set_value(ctx):
+def set_value(ctx: DefaultExecutionContext) -> str | None:
     ctx = ctx.current_parameters
     if not ctx['password']:
         return
@@ -373,11 +379,15 @@ def set_value(ctx):
     return salt
 
 
-def make_user_id():
+def make_user_id() -> str:
     uid = mem['session'].query(mem['User'].id, func.max(mem['User'].id)).first()[-1]
     return f'user{uid + 1}'
 
 
-def get_user(session, user):
+def get_user(session: Session, user: 'User') -> Union['User', None]:
     player = session.query(user.__class__).filter_by(username=user.username).all()
     return player[0] if player else None
+
+
+if True:
+    from database_files.database import User

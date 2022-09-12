@@ -1,4 +1,9 @@
-def set_scene(scene):
+from typing import Type
+
+from utils import BaseScreen
+
+
+def set_scene(scene: Type[BaseScreen]):
     mem['game'].scene = scene()
 
 
