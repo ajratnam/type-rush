@@ -2,7 +2,7 @@ from threading import Thread
 
 from playsound import playsound
 
-from config import WELCOME_SOUND
+from config import WELCOME_SOUND_PATH
 from database_files.action import setup_database
 from database_files.database import Session, engine
 from mem_hub import mem
@@ -20,7 +20,7 @@ class Game:
     scene = LoginScene()
 
 
-Thread(target=playsound, args=(WELCOME_SOUND,), daemon=True).start()
+Thread(target=playsound, args=(WELCOME_SOUND_PATH,), daemon=True).start()
 
 
 game = Game()

@@ -3,9 +3,10 @@ import string
 import time
 from typing import Iterator
 
+import pygame
 from playsound import playsound
 
-from config import EXIT_SOUND
+from config import EXIT_SOUND_PATH
 from game_files.story_maker import parse_stories
 from scenes import set_scene
 from utils import *
@@ -13,7 +14,7 @@ from utils import *
 left_default_text = Text(LEFT_BUTTON_TEXT, LEFT_BUTTON_COORDS, *BUTTON_SIZE, background_color=LEFT_BUTTON_COLORS[0], font=MediumFont)
 LEFT_BUTTON = Button(left_default_text, {'background_color': LEFT_BUTTON_COLORS[1]})
 right_default_text = Text(RIGHT_BUTTON_TEXT, RIGHT_BUTTON_COORDS, *BUTTON_SIZE, background_color=RIGHT_BUTTON_COLORS[0], font=MediumFont)
-RIGHT_BUTTON = Button(right_default_text, {'background_color': RIGHT_BUTTON_COLORS[1]}, action=lambda: [pygame.display.quit(), playsound(EXIT_SOUND,), stop()])
+RIGHT_BUTTON = Button(right_default_text, {'background_color': RIGHT_BUTTON_COLORS[1]}, action=lambda: [pygame.display.quit(), playsound(EXIT_SOUND_PATH,), stop()])
 
 LOGOUT_BUTTON = RIGHT_BUTTON.modify({'text': 'Logout', 'position': pos(LEFT_BUTTON_COORDS[0], 7 * HEIGHT / 8)})
 STATS_BUTTON = LEFT_BUTTON.modify({'text': 'View Stats', 'position': pos(RIGHT_BUTTON_COORDS[0], 7 * HEIGHT / 8)}, action=lambda: set_scene(mem['history']))
@@ -46,7 +47,7 @@ class Game(BaseScreen):
         self.last_call: float = 0
         self.graph_call: float = 0
         self.sleep_time: float = .5
-        self.word_rect: Text | None = None
+        self.word_rect: pygame.Rect | None = None
 
         story = random.choice(parse_stories())
         self.story: Iterator[str] = iter(story)

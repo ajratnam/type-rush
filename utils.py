@@ -31,18 +31,18 @@ class Colors:
     GREY = 170, 170, 170
 
 
-def get_path(directory: str, file: str) -> str:
+def get_path(directory: str, *file: str) -> str:
     """
     Merges a given directory and a file name to get the path of the file.
 
     Args:
       directory (str): The directory of the file you want to get the path of.
-      file (str): The name of the file you want to open.
+      *file (str): The name(s) of the file you want to open.
 
     Returns:
       str: The path to the file.
     """
-    return os.path.join(os.path.dirname(directory), file)
+    return os.path.join(os.path.dirname(directory), *file)
 
 
 pos = partial(pygame.Vector2)
@@ -67,7 +67,7 @@ GAME_AREA = pygame.Vector2(DIMENSIONS)
 
 
 def stop() -> None:
-    raise
+    exit(0)
 
 
 class Text:
@@ -83,7 +83,7 @@ class Text:
         background_color (tuple): The background color of the text, a.k.a. the color of the box that the text is within.
         text_color (tuple): The color of the text to be displayed in.
         text_is_centered (bool): Weather the text should be centered within the box. If not, it will be aligned to the top left corner of the box.
-        box_is_centered (bool): Weather the box should be centered at the given position. If not, it will be aligned to the top left corner at the postion.
+        box_is_centered (bool): Weather the box should be centered at the given position. If not, it will be aligned to the top left corner at the position.
         alpha (int): The transparency of the textbox.
     """
     def __init__(self, text: str | list, position: Optional[pygame.Vector2 | tuple[int, int]] = None, width: int = 0, height: int = 0, font: pygame.font.Font = SmallFont, background_color: Optional[tuple[int, int, int]] = None, text_color: tuple[int, int, int] = TEXT_COLOR, text_is_centered: bool = True, box_is_centered: bool = True, alpha: Optional[int] = None) -> None:
@@ -118,7 +118,7 @@ class Text:
         Create a new Text object with the same format as the current one, but with a different text.
 
         Args:
-          text (str | list): The new text to be formatted.
+          text (str/list): The new text to be formatted.
 
         Returns:
           Text: The copied Text object with the new text.
@@ -326,8 +326,8 @@ class TextInput:
 
         Args:
           question (Text): The question to be asked.
-          _input (Optional[Text | dict]): The configuration of the text entered by the user.
-          placeholder (Text | str | dict): The text that will be displayed when the input is empty.
+          _input (Text/dict, optional): The configuration of the text entered by the user.
+          placeholder (Text/str/dict): The text that will be displayed when the input is empty.
           password (bool): If True, the input will be hidden. Defaults to False
           active (bool): Whether the input is active or not. Defaults to False
           _prev (TextInput, optional): The previous TextInput to be linked to in the group.

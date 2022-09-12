@@ -29,5 +29,5 @@ def parse_stories() -> list[str]:
     Returns:
       list[str]: A list of strings.
     """
-    with open(get_path(__name__, 'stories'), 'r') as file:
+    with open(get_path(__file__, '..', 'stories'), 'r') as file:
         return [story.replace('\n', ' ').strip() for story in file.read().split('---')]
