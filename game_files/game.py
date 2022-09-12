@@ -20,8 +20,8 @@ STATS_BUTTON = LEFT_BUTTON.modify({'text': 'View Stats', 'position': pos(RIGHT_B
 
 
 class Game(BaseScreen):
-    def __init__(self):
-        self.scene_name = GAME_NAME
+    def __init__(self) -> None:
+        self.scene_name: str = GAME_NAME
         self.scene = self.draw_outer_scene
         self.score = 0
         self.word = None
@@ -39,23 +39,23 @@ class Game(BaseScreen):
 
         self.graph = LiveGraph(self, story)
 
-    def draw_outer_scene(self):
+    def draw_outer_scene(self) -> None:
         Text(self.scene_name, (WIDTH/2, HEIGHT/4), font=LargerFont).draw()
         LEFT_BUTTON.draw(self)
         RIGHT_BUTTON.draw(self)
         LOGOUT_BUTTON.draw(self)
         STATS_BUTTON.draw(self)
 
-    def start_game(self):
+    def start_game(self) -> None:
         self.scene = self.draw_game
         self.word = self.random_letter
 
-    def draw_graph(self):
+    def draw_graph(self) -> None:
         if (now := time.time()) - self.graph_call > 1:
             self.graph_call = now
             self.graph.plot()
 
-    def draw_game(self):
+    def draw_game(self) -> None:
         score = Text(f'Your Score: {self.score}', GAME_AREA // 8, font=MediumFont, text_color=Colors.GREY)
         score.draw()
         score.modify(f'Score to Beat: {self.score}', pos(WIDTH * 5 // 6, HEIGHT // 8)).draw()
@@ -63,12 +63,12 @@ class Game(BaseScreen):
         self.draw_graph()
 
     @property
-    def char(self):
+    def char(self) -> str:
         if not self.word:
             self.word += self.random_letter
         return self.word[0]
 
-    def handle_keys(self):
+    def handle_keys(self) -> None:
         for event in self.events:
             if event.type == pygame.QUIT:
                 stop()
@@ -83,14 +83,14 @@ class Game(BaseScreen):
                     self.wrong += 1
 
     @property
-    def now(self):
+    def now(self) -> float:
         return time.perf_counter()
 
     @property
-    def random_letter(self):
+    def random_letter(self) -> str:
         return next(self.story)
 
-    def handler(self):
+    def handler(self) -> None:
         if isinstance(self.word, str) and self.now - self.last_call > self.sleep_time:
             self.word = self.word + self.random_letter
             self.sleep_time -= TEXT_SPEED
