@@ -15,12 +15,6 @@ from utils import BaseScreen, Button, Text, pos, Colors, screen, GAME_AREA, Font
 
 
 def history_iterator() -> Iterator[Score]:
-    """
-    Fetches the all the scores of the user from the database and returns them as an iterator.
-
-    Yields:
-        Score: The score of the user from the database.
-    """
     yield from (
         mem['session'].query(Score)
         .filter_by(user_id=mem['user'].id)
@@ -37,19 +31,6 @@ STOP_COMPARE_BUTTON = BACK_BUTTON_MAIN.modify({'box_is_centered': False, 'font':
 
 
 class History(BaseScreen):
-    """
-    This is the class which handles everything related to the graphing and displaying the old scores of the player.
-
-    Attributes:
-      history (list): The list of all the scores of the player.
-      page (int): The current page of the history.
-      index (int): The index of the score to display.
-      score (Score): The score to display.
-      original_score (Score): The score to compare with.
-      surf (pygame.Surface): The surface on which the graph is drawn.
-      size (pygame.Vector2): The size of the surface on which the graph is drawn.
-      scene (function): The function to call to display the graph.
-    """
     history: list
     index: int
     score: Score
@@ -59,9 +40,6 @@ class History(BaseScreen):
     original_score: Score | None = None
 
     def __init__(self) -> None:
-        """
-        Remap the function of the buttons.
-        """
         PREV_BUTTON.action = lambda: setattr(self, 'page', self.page - 1)
         NEXT_BUTTON.action = lambda: setattr(self, 'page', self.page + 1)
         BACK_BUTTON_SUB.action = lambda: setattr(self, 'scene', self.show_history)
@@ -69,9 +47,6 @@ class History(BaseScreen):
         STOP_COMPARE_BUTTON.action = lambda: [setattr(self, 'original_score', None), lambda: setattr(self, 'scene', self.show_history)]
 
     def show_history(self) -> None:
-        """
-        It displays the history of the user's games in a grid of buttons.
-        """
         if not hasattr(self, 'history'):
             self.history = list(history_iterator())
 
@@ -91,12 +66,6 @@ class History(BaseScreen):
             NEXT_BUTTON.draw(self)
 
     def create_graph(self) -> tuple[pygame.Surface, pygame.Vector2]:
-        """
-        It creates a graph of the user's score over time, which is renderable to the pygame window.
-
-        Returns:
-          tuple[pygame.Surface, pygame.Vector2]: A tuple of the renderable graph object, and the size of the graph.
-        """
         plt.ioff()
         plt.close('all')
         figure, axes = plt.subplots()
@@ -142,18 +111,9 @@ class History(BaseScreen):
 
     @property
     def pages(self) -> int:
-        """
-        It returns the number of pages needed to display all the results.
-
-        Returns:
-          The number of pages.
-        """
         return math.ceil(self.count / 20)
 
     def graph(self) -> None:
-        """
-        This calls a function to draw the graph of the score of the player, along with the navigation buttons.
-        """
         screen.blit(self.surf, ((GAME_AREA - self.size)/2).xy)
         if self.original_score:
             STOP_COMPARE_BUTTON.draw(self)
@@ -162,12 +122,6 @@ class History(BaseScreen):
             COMPARE_BUTTON.draw(self)
 
     def toggle(self, score: int) -> None:
-        """
-        It generates the graph of the score of the player at the specified index.
-
-        Args:
-          score (int): The index of the score to display.
-        """
         self.index = score
         self.score = self.history[score]
         self.surf, self.size = self.create_graph()
@@ -175,12 +129,6 @@ class History(BaseScreen):
 
     @property
     def count(self) -> int:
-        """
-        It returns the count of the games played by the user, which are stored in the database.
-
-        Returns:
-          int: The number of games played by the user.
-        """
         return len(self.history)
 
     scene = show_history

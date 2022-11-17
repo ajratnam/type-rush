@@ -11,12 +11,6 @@ from login_system.login import LoginScene
 
 
 class Game:
-    """
-    This class handles the scene management.
-
-    Attributes:
-        scene (function): It is the current scene being rendered.
-    """
     scene = LoginScene()
 
 

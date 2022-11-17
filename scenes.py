@@ -4,12 +4,6 @@ from utils import BaseScreen
 
 
 def set_scene(scene: Type[BaseScreen]) -> None:
-    """
-    It changes the current scene to the scene passed in.
-
-    Args:
-      scene (Type[BaseScreen]): The scene to set.
-    """
     mem['game'].scene = scene()
 
 
